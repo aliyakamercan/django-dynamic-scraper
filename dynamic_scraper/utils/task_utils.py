@@ -5,7 +5,12 @@ settings = get_project_settings()
 from dynamic_scraper.models import Scraper
 from scrapyd.config import Config
 from ConfigParser import NoOptionError
-
+scrapyd_config = Config()
+try:
+    scrapyd_url = scrapyd_config.get('url')
+except NoOptionError:
+    scrapyd_url = "localhost:6800"
+            
 class TaskUtils():
     
     conf = {
@@ -21,11 +26,7 @@ class TaskUtils():
             'run_type': kwargs['run_type'],
             'do_action': kwargs['do_action']
         }
-        scrapyd_config = Config()
-        try:
-            scrapyd_url = scrapyd_config.get('url')
-        except NoOptionError:
-            scrapyd_url = "localhost:6800"
+        
 
         params = urllib.urlencode(param_dict)
         headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
@@ -36,7 +37,7 @@ class TaskUtils():
     
     def _pending_jobs(self, spider):
         # Ommit scheduling new jobs if there are still pending jobs for same spider
-        resp = urllib2.urlopen('http://localhost:6800/listjobs.json?project=default')
+        resp = urllib2.urlopen(scrapyd_url + 'listjobs.json?project=default')
         data = json.load(resp)
         if 'pending' in data:
             for item in data['pending']:
